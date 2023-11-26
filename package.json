@@ -1,0 +1,19 @@
+{
+  "name": "@hexlet/code",
+  "version": "1.0.0",
+  "description": "Compares two configuration files and shows a difference",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mizkuzy/frontend-project-46.git"
+  },
+  "author": "lrudkova",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mizkuzy/frontend-project-46/issues"
+  },
+  "homepage": "https://github.com/mizkuzy/frontend-project-46#readme"
+}
