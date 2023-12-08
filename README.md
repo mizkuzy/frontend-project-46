@@ -2,3 +2,10 @@
 
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/mizkuzy/frontend-project-46/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/mizkuzy/frontend-project-46/actions)
+
+### Description
+
+**gendiff** utility can work both with absolute and relative paths 
+
+### A demonstration of utility's work
+[![asciicast](https://asciinema.org/a/G1dboET1romSEvrRIhMsJcIGk.svg)](https://asciinema.org/a/G1dboET1romSEvrRIhMsJcIGk)
