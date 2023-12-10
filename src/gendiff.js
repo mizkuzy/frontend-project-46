@@ -33,6 +33,12 @@ const getDiff = (object1, object2) => {
   return result;
 };
 
+const generateDifference = (fp1, fp2) => {
+  const [json1, json2] = parseFiles(fp1, fp2);
+
+  return getDiff(json1, json2);
+};
+
 const run = () => {
   const program = new Command();
 
@@ -43,8 +49,7 @@ const run = () => {
     .argument('<filepath1>')
     .argument('<filepath2>')
     .action((fp1, fp2) => {
-      const [json1, json2] = parseFiles(fp1, fp2);
-      const jsonsDiff = getDiff(json1, json2);
+      const jsonsDiff = generateDifference(fp1, fp2);
 
       console.log(jsonsDiff);
     });
@@ -54,5 +59,7 @@ const run = () => {
 
   program.parse();
 };
+
+export { generateDifference };
 
 export default run;
