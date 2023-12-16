@@ -1,4 +1,5 @@
-<a href="https://codeclimate.com/github/mizkuzy/frontend-project-46/maintainability"><img src="https://api.codeclimate.com/v1/badges/7438cbdce9e6f163e6de/maintainability" /></a>
+[![Maintainability](https://api.codeclimate.com/v1/badges/7438cbdce9e6f163e6de/maintainability)](https://codeclimate.com/github/mizkuzy/frontend-project-46/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/7438cbdce9e6f163e6de/test_coverage)](https://codeclimate.com/github/mizkuzy/frontend-project-46/test_coverage)
 [![Actions Status](https://github.com/mizkuzy/frontend-project-46/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/mizkuzy/frontend-project-46/actions)
 [![Actions Status](https://github.com/mizkuzy/frontend-project-46/actions/workflows/main.yml/badge.svg)](https://github.com/mizkuzy/frontend-project-46/actions)
 
