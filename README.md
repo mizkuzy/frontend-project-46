@@ -3,9 +3,22 @@
 [![Actions Status](https://github.com/mizkuzy/frontend-project-46/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/mizkuzy/frontend-project-46/actions)
 [![Actions Status](https://github.com/mizkuzy/frontend-project-46/actions/workflows/main.yml/badge.svg)](https://github.com/mizkuzy/frontend-project-46/actions)
 
-### Description
+### Usage
+```shell
+Usage: gendiff [options] <filepath1> <filepath2>
 
-**gendiff** utility can work both with absolute and relative paths 
+Compares two configuration files and shows a difference.
+
+Options:
+  -V, --version        output the version number
+  -f, --format <type>  output format
+  -h, --help           display help for command
+```
+
+### API
+
+// todo
 
 ### A demonstration of utility's work
 [![asciicast](https://asciinema.org/a/G1dboET1romSEvrRIhMsJcIGk.svg)](https://asciinema.org/a/G1dboET1romSEvrRIhMsJcIGk)
+
