@@ -20,5 +20,9 @@ Options:
 // todo
 
 ### A demonstration of utility's work
+With *.json files
 [![asciicast](https://asciinema.org/a/G1dboET1romSEvrRIhMsJcIGk.svg)](https://asciinema.org/a/G1dboET1romSEvrRIhMsJcIGk)
+
+With *.yaml, *.yml files
+[![asciicast](https://asciinema.org/a/haqXEV1CnfXxuo9n098t9y9l6.svg)](https://asciinema.org/a/haqXEV1CnfXxuo9n098t9y9l6)
 
