@@ -12,7 +12,7 @@ const getDiff = (object1, object2) => {
 
   let result = '{\n';
 
-  for (const key of sortedUniqueKeys) {
+  sortedUniqueKeys.forEach((key) => {
     const val1 = object1[key];
     const val2 = object2[key];
 
@@ -26,7 +26,7 @@ const getDiff = (object1, object2) => {
       result += append(key, val1, '-');
       result += append(key, val2, '+');
     }
-  }
+  });
 
   result += '}';
 
