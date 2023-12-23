@@ -4,37 +4,71 @@ import uniq from 'lodash.uniq';
 import parseFiles from './parser.js';
 import formatDiff from './formatter.js';
 
-// const diffObjExample = {
-//   common: {
-//     diffAddedValues: {
-//       follow: false, setting3: null, setting4: 'blah blah', setting5: { key5: 'value5' },
+// const obj = {
+//   "common": {
+//     "setting1": "Value 1",
+//     "diffRemovedProperties": {
+//       "setting2": 200,
+//       "setting3": true
 //     },
-//     diffRemovedValues: { setting2: 200, setting3: true },
-//     setting1: 'Value 1',
-//     setting6: {
-//       diffAddedValues: { ops: 'vops' },
-//       doge: {
-//         diffAddedValues: { wow: 'so much' },
-//         diffRemovedValues: { wow: '' },
+//     "diffAddedProperties": {
+//       "setting3": null,
+//       "follow": false,
+//       "setting4": "blah blah",
+//       "setting5": {
+//         "key5": "value5"
+//       }
+//     },
+//     "setting6": {
+//       "key": "value",
+//       "doge": {
+//         "diffAddedProperties": {
+//           "wow": "so much"
+//         },
+//         "diffRemovedProperties": {
+//           "wow": ""
+//         }
 //       },
-//       key: 'value',
+//       "diffAddedProperties": {
+//         "ops": "vops"
+//       }
+//     }
+//   },
+//   "group1": {
+//     "diffAddedProperties": {
+//       "baz": "bars",
+//       "nest": "str"
 //     },
+//     "diffRemovedProperties": {
+//       "baz": "bas",
+//       "nest": {
+//         "key": "value"
+//       }
+//     },
+//     "foo": "bar"
 //   },
-//   group1: {
-//     foo: 'bar',
-//     diffAddedValues: { baz: 'bars', nest: 'str' },
-//     diffRemovedValues: { baz: 'bas', nest: { key: 'value' } },
+//   "diffRemovedProperties": {
+//     "group2": {
+//       "abc": 12345,
+//       "deep": {
+//         "id": 45
+//       }
+//     }
 //   },
-//   diffAddedValues: { myTest: 1 },
-//   diffRemovedValues: { myTest: { inner: 1 } },
-// };
+//   "diffAddedProperties": {
+//     "group3": {
+//       "deep": {
+//         "id": {
+//           "number": 45
+//         }
+//       },
+//       "fee": 100500
+//     }
+//   }
+// }
 
 const getDiff = (inputObj1, inputObj2) => {
-  console.log('!!GET_DIFF');
   const iter = (acc, object1, object2) => {
-    console.log('object1', object1);
-    console.log('object2', object2);
-
     const keys = [...Object.keys(object1), ...Object.keys(object2)];
     const uniqueKeys = uniq(keys);
 
@@ -50,18 +84,18 @@ const getDiff = (inputObj1, inputObj2) => {
         (val2 !== undefined && isObject(val1) && !isObject(val2))
         || (val1 !== undefined && isObject(val2) && !isObject(val1))
       ) {
-        acc.diffAddedValues = { ...acc.diffAddedValues, [key]: val2 };
-        acc.diffRemovedValues = { ...acc.diffRemovedValues, [key]: val1 };
+        acc.diffAddedProperties = { ...acc.diffAddedProperties, [key]: val2 };
+        acc.diffRemovedProperties = { ...acc.diffRemovedProperties, [key]: val1 };
       } else if (val1 === val2) {
       // case both primitives
         acc[key] = val1;
       } else if (val1 === undefined) {
-        acc.diffAddedValues = { ...acc.diffAddedValues, [key]: val2 };
+        acc.diffAddedProperties = { ...acc.diffAddedProperties, [key]: val2 };
       } else if (val2 === undefined) {
-        acc.diffRemovedValues = { ...acc.diffRemovedValues, [key]: val1 };
+        acc.diffRemovedProperties = { ...acc.diffRemovedProperties, [key]: val1 };
       } else {
-        acc.diffAddedValues = { ...acc.diffAddedValues, [key]: val2 };
-        acc.diffRemovedValues = { ...acc.diffRemovedValues, [key]: val1 };
+        acc.diffAddedProperties = { ...acc.diffAddedProperties, [key]: val2 };
+        acc.diffRemovedProperties = { ...acc.diffRemovedProperties, [key]: val1 };
       }
     });
 

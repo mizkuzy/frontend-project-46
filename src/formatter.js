@@ -1,58 +1,166 @@
 import uniq from 'lodash.uniq';
 import sortBy from 'lodash.sortby';
+import isObject from 'lodash.isobject';
 
-const createLine = (key, value, differenceSign) => (differenceSign ? `${differenceSign} ${key}: ${value}` : `${key}: ${value}`);
+const BASE_INDENT_COUNT = 4;
+const HAS_DIFF_INDENT_COUNT = 2;
 
-const getStyledDiff = ({ diffAddedValues, diffRemovedValues, ...rest }) => {
-  const keys = [
-    ...Object.keys(diffAddedValues),
-    ...Object.keys(diffRemovedValues),
-    Object.keys(rest)];
-  const uniqueKeys = uniq(keys);
-  const sortedUniqueKeys = sortBy(uniqueKeys);
+const getDifferenceSign = (isAdded) => {
+  let differenceSign;
 
-  const lines = [];
+  switch (isAdded) {
+    case true:
+      differenceSign = '+';
+      break;
+    case false:
+      differenceSign = '-';
+      break;
+    default:
+      differenceSign = undefined;
+  }
 
-  sortedUniqueKeys.forEach((key) => {
-    if (Object.hasOwn(rest, key)) {
-      lines.push(createLine(key, rest[key]));
-      return;
-    }
+  return differenceSign;
+};
 
-    const isValueAdded = Object.hasOwn(diffAddedValues, key);
-    const isValueRemoved = Object.hasOwn(diffRemovedValues, key);
+const getBeforePropSign = (differenceSign) => (differenceSign ? `${differenceSign} ` : '');
 
-    const isValueUpdated = isValueAdded && isValueRemoved;
+const createPrimitivePropLine = (key, value, indentsCount, isAdded) => {
+  const indent = ' '.repeat(indentsCount);
+  const differenceSign = getDifferenceSign(isAdded);
 
-    if (isValueUpdated) {
-      lines.push(createLine(key, diffRemovedValues[key], '-'));
-      lines.push(createLine(key, diffAddedValues[key], '+'));
-      return;
-    }
+  return `${indent}${getBeforePropSign(differenceSign)}${key}: ${value}`.trimEnd();
+};
 
-    if (isValueAdded) {
-      lines.push(createLine(key, diffAddedValues[key], '+'));
-      return;
-    }
+const createObjectPropLine = (key, indentsCount, isOpen, isAdded) => {
+  const indent = ' '.repeat(indentsCount);
+  const differenceSign = getDifferenceSign(isAdded);
 
-    if (isValueRemoved) {
-      lines.push(createLine(key, diffRemovedValues[key], '-'));
-    }
-  });
+  return isOpen ? `${indent}${getBeforePropSign(differenceSign)}${key}: {` : `${indent}}`;
+};
+
+const addLines = (depth, key, value, iter, lines, isAdded) => {
+  const indentWithoutDiffCount = BASE_INDENT_COUNT * depth;
+  const indentWithDiffCount = indentWithoutDiffCount - HAS_DIFF_INDENT_COUNT;
+
+  if (isObject(value)) {
+    const {
+      diffAddedProperties: addedProps,
+      diffRemovedProperties: removedProps,
+      ...innerRest
+    } = value;
+
+    const innerLines = iter(depth + 1, addedProps, removedProps, innerRest);
+
+    lines.push(createObjectPropLine(
+      key,
+      isAdded === undefined ? indentWithoutDiffCount : indentWithDiffCount,
+      true,
+      isAdded,
+    ));
+    lines.push(innerLines);
+    lines.push(createObjectPropLine(key, indentWithoutDiffCount, false, isAdded));
+  } else {
+    lines.push(createPrimitivePropLine(
+      key,
+      value,
+      isAdded === undefined ? indentWithoutDiffCount : indentWithDiffCount,
+      isAdded,
+    ));
+  }
+};
+
+const stylish = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
+  const iter = (depth, addedProperties = {}, removedProperties = {}, equalProperties = {}) => {
+    const keys = [
+      ...Object.keys(addedProperties),
+      ...Object.keys(removedProperties),
+      ...Object.keys(equalProperties),
+    ];
+
+    const uniqueKeys = uniq(keys);
+    const sortedUniqueKeys = sortBy(uniqueKeys);
+
+    const lines = [];
+
+    sortedUniqueKeys.forEach((key) => {
+      const isPropExistInBothFiles = Object.hasOwn(equalProperties, key);
+
+      const indentWithoutDiffCount = BASE_INDENT_COUNT * depth;
+      const indentWithDiffCount = indentWithoutDiffCount - HAS_DIFF_INDENT_COUNT;
+
+      const isValueAdded = Object.hasOwn(addedProperties, key);
+      const isValueRemoved = Object.hasOwn(removedProperties, key);
+
+      const isValueUpdated = isValueAdded && isValueRemoved;
+
+      if (isPropExistInBothFiles) {
+        const value = equalProperties[key];
+
+        addLines(depth, key, value, iter, lines);
+      } else if (isValueUpdated) {
+        const addedValue = addedProperties[key];
+        const removedValue = removedProperties[key];
+
+        if (!isObject(addedValue) && !isObject(removedValue)) {
+          lines.push(createPrimitivePropLine(key, removedValue, indentWithDiffCount, false));
+          lines.push(createPrimitivePropLine(key, addedValue, indentWithDiffCount, true));
+        } else if (isObject(addedValue) && !isObject(removedValue)) {
+          const {
+            diffAddedProperties: addedProps,
+            diffRemovedProperties: removedProps,
+            ...innerRest
+          } = addedValue;
+
+          const innerLines = iter(depth + 1, addedProps, removedProps, innerRest);
+
+          lines.push(innerLines);
+          lines.push(createPrimitivePropLine(key, addedValue, indentWithDiffCount, true));
+        } else if (!isObject(addedValue) && isObject(removedValue)) {
+          const {
+            diffAddedProperties: addedProps,
+            diffRemovedProperties: removedProps,
+            ...innerRest
+          } = removedValue;
+
+          const innerLines = iter(depth + 1, addedProps, removedProps, innerRest);
+
+          lines.push(createObjectPropLine(key, indentWithDiffCount, true, false));
+          lines.push(innerLines);
+          lines.push(createObjectPropLine(key, indentWithoutDiffCount, false));
+
+          lines.push(createPrimitivePropLine(key, addedValue, indentWithDiffCount, true));
+        }
+      } else if (isValueAdded) {
+        const addedValue = addedProperties[key];
+
+        addLines(depth, key, addedValue, iter, lines, true);
+      } else if (isValueRemoved) {
+        const removedValue = removedProperties[key];
+
+        addLines(depth, key, removedValue, iter, lines, false);
+      }
+    });
+
+    return [
+      ...lines,
+    ].join('\n');
+  };
+
+  const result = iter(1, diffAddedProperties, diffRemovedProperties, rest);
 
   return [
     '{',
-    ...lines,
+    result,
     '}',
   ].join('\n');
 };
 
 const formatDiff = (diff, type) => {
   if (type === 'stylish') {
-    return getStyledDiff(diff);
+    return stylish(diff);
   }
 
-  return 'u r default';
+  return 'u r not stylish';
 };
 
 export default formatDiff;
