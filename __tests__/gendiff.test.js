@@ -10,25 +10,35 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const getFixturePath = (filename) => path.join(__dirname, '..', '__fixtures__', filename);
 const readFile = (filename) => fs.readFileSync(getFixturePath(filename), 'utf-8');
 
-const cases = [['json'], ['yml'], ['yaml']];
+const CASES = [['json'], ['yml'], ['yaml']];
 
-describe.each(cases)('gendiff for extension %s', (extension) => {
-  test('plain object', () => {
+describe.each(CASES)('gendiff for extension %s', (extension) => {
+  test('stylish format plain object', () => {
     const file1Path = getFixturePath(`plain1.${extension}`);
     const file2Path = getFixturePath(`plain2.${extension}`);
 
-    const actual = generateDifference(file1Path, file2Path);
-    const expected = readFile('plainJsonsResult');
+    const actual = generateDifference(file1Path, file2Path, 'stylish');
+    const expected = readFile('stylishPlainJsonsResult');
 
     expect(actual).toEqual(expected);
   });
 
-  test('nested object', () => {
+  test('stylish format nested objects', () => {
     const file1Path = getFixturePath(`nested1.${extension}`);
     const file2Path = getFixturePath(`nested2.${extension}`);
 
-    const actual = generateDifference(file1Path, file2Path);
-    const expected = readFile('nestedJsonsResult');
+    const actual = generateDifference(file1Path, file2Path, 'stylish');
+    const expected = readFile('stylishNestedJsonsResult');
+
+    expect(actual).toEqual(expected);
+  });
+
+  test('plain format nested objects', () => {
+    const file1Path = getFixturePath(`nested1.${extension}`);
+    const file2Path = getFixturePath(`nested2.${extension}`);
+
+    const actual = generateDifference(file1Path, file2Path, 'plain');
+    const expected = readFile('plainNestedJsonsResult');
 
     expect(actual).toEqual(expected);
   });
