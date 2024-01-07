@@ -1,6 +1,5 @@
-import uniq from 'lodash.uniq';
-import sortBy from 'lodash.sortby';
 import isObject from 'lodash.isobject';
+import { getPropStatus, getSortedUniqueKeys } from './helpers.js';
 
 const BASE_INDENT_COUNT = 4;
 const HAS_DIFF_INDENT_COUNT = 2;
@@ -71,27 +70,26 @@ const addLines = (depth, key, value, iter, lines, isAdded) => {
 
 const stylish = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
   const iter = (depth, addedProperties = {}, removedProperties = {}, equalProperties = {}) => {
-    const keys = [
-      ...Object.keys(addedProperties),
-      ...Object.keys(removedProperties),
-      ...Object.keys(equalProperties),
-    ];
-
-    const uniqueKeys = uniq(keys);
-    const sortedUniqueKeys = sortBy(uniqueKeys);
+    const sortedUniqueKeys = getSortedUniqueKeys(
+      addedProperties,
+      removedProperties,
+      equalProperties,
+    );
 
     const lines = [];
 
     sortedUniqueKeys.forEach((key) => {
-      const isPropExistInBothFiles = Object.hasOwn(equalProperties, key);
-
       const indentWithoutDiffCount = BASE_INDENT_COUNT * depth;
       const indentWithDiffCount = indentWithoutDiffCount - HAS_DIFF_INDENT_COUNT;
 
-      const isValueAdded = Object.hasOwn(addedProperties, key);
-      const isValueRemoved = Object.hasOwn(removedProperties, key);
-
-      const isValueUpdated = isValueAdded && isValueRemoved;
+      const {
+        isPropExistInBothFiles, isValueUpdated, isValueAdded, isValueRemoved,
+      } = getPropStatus(
+        key,
+        equalProperties,
+        addedProperties,
+        removedProperties,
+      );
 
       if (isPropExistInBothFiles) {
         const value = equalProperties[key];
