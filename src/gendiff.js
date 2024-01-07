@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import isObject from 'lodash.isobject';
 import uniq from 'lodash.uniq';
 import parseFiles from './parser.js';
-import { plain, stylish } from './formatters/index.js';
+import getFormattedDiff from './formatters/index.js';
 
 // const obj = {
 //   "common": {
@@ -103,18 +103,6 @@ const getDiff = (inputObj1, inputObj2) => {
   };
 
   return iter({}, inputObj1, inputObj2);
-};
-
-const getFormattedDiff = (diff, type) => {
-  if (type === 'stylish') {
-    return stylish(diff);
-  }
-
-  if (type === 'plain') {
-    return plain(diff);
-  }
-
-  throw new Error('Unexpected format type');
 };
 
 const generateDifference = (fp1, fp2, formatType = 'stylish') => {
