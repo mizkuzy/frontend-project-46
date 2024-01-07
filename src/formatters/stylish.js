@@ -155,12 +155,4 @@ const stylish = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
   ].join('\n');
 };
 
-const formatDiff = (diff, type) => {
-  if (type === 'stylish') {
-    return stylish(diff);
-  }
-
-  return 'u r not stylish';
-};
-
-export default formatDiff;
+export default stylish;
