@@ -1,4 +1,3 @@
-import { Command } from 'commander';
 import isObject from 'lodash.isobject';
 import uniq from 'lodash.uniq';
 import parseFiles from './parser.js';
@@ -50,29 +49,4 @@ const generateDifference = (fp1, fp2, formatType = 'stylish') => {
   return getFormattedDiff(diff, formatType);
 };
 
-const run = () => {
-  const program = new Command();
-
-  program
-    .name('gendiff')
-    .description('Compares two configuration files and shows a difference.')
-    .version('1.0.0')
-    .argument('<filepath1>')
-    .argument('<filepath2>')
-    .action((fp1, fp2) => {
-      const { format } = program.opts();
-
-      const jsonsDiff = generateDifference(fp1, fp2, format);
-
-      console.log(jsonsDiff);
-    });
-
-  program
-    .option('-f, --format <type>', 'output format', 'stylish');
-
-  program.parse();
-};
-
-export { generateDifference };
-
-export default run;
+export default generateDifference;
