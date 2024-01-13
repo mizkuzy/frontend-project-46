@@ -27,7 +27,7 @@ const createPrimitivePropLine = (key, value, indentsCount, isAdded) => {
   const indent = ' '.repeat(indentsCount);
   const differenceSign = getDifferenceSign(isAdded);
 
-  return `${indent}${getBeforePropSign(differenceSign)}${key}: ${value}`.trimEnd();
+  return `${indent}${getBeforePropSign(differenceSign)}${key}: ${String(value)}`.trimEnd();
 };
 
 const createObjectPropLine = (key, indentsCount, isOpen, isAdded) => {

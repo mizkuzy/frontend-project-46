@@ -23,6 +23,16 @@ describe.each(CASES)('gendiff for extension %s', (extension) => {
     expect(actual).toEqual(expected);
   });
 
+  test('default format nested objects', () => {
+    const file1Path = getFixturePath(`nested1.${extension}`);
+    const file2Path = getFixturePath(`nested2.${extension}`);
+
+    const actual = generateDifference(file1Path, file2Path);
+    const expected = readFile('stylishNestedJsonsResult');
+
+    expect(actual).toEqual(expected);
+  });
+
   test('stylish format nested objects', () => {
     const file1Path = getFixturePath(`nested1.${extension}`);
     const file2Path = getFixturePath(`nested2.${extension}`);
