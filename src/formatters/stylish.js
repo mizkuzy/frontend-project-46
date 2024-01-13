@@ -5,20 +5,14 @@ const BASE_INDENT_COUNT = 4;
 const HAS_DIFF_INDENT_COUNT = 2;
 
 const getDifferenceSign = (isAdded) => {
-  let differenceSign;
-
   switch (isAdded) {
     case true:
-      differenceSign = '+';
-      break;
+      return '+';
     case false:
-      differenceSign = '-';
-      break;
+      return '-';
     default:
-      differenceSign = undefined;
+      return undefined;
   }
-
-  return differenceSign;
 };
 
 const getBeforePropSign = (differenceSign) => (differenceSign ? `${differenceSign} ` : '');

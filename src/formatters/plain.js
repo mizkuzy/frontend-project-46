@@ -1,28 +1,21 @@
 import isObject from 'lodash.isobject';
 import { getPropStatus, getSortedUniqueKeys } from './helpers.js';
 
-function formatValuesForPrint(from, to) {
-  let fromValToPrint = from;
-  let toValToPrint = to;
-
-  if (isObject(from)) {
-    fromValToPrint = '[complex value]';
-  }
-  if (isObject(to)) {
-    toValToPrint = '[complex value]';
+const formatValue = (value) => {
+  if (isObject(value)) {
+    return '[complex value]';
   }
 
-  if (typeof from === 'string') {
-    fromValToPrint = `'${from}'`;
+  if (typeof value === 'string') {
+    return `'${value}'`;
   }
-  if (typeof to === 'string') {
-    toValToPrint = `'${to}'`;
-  }
-  return { fromValToPrint, toValToPrint };
-}
+
+  return value;
+};
 
 const createLine = (property, from, to, isAdded, isRemoved) => {
-  const { fromValToPrint, toValToPrint } = formatValuesForPrint(from, to);
+  const fromValToPrint = formatValue(from);
+  const toValToPrint = formatValue(to);
 
   const isUpdated = isAdded && isRemoved;
 

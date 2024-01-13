@@ -8,34 +8,35 @@ const getDiff = (inputObj1, inputObj2) => {
     const keys = [...Object.keys(object1), ...Object.keys(object2)];
     const uniqueKeys = uniq(keys);
 
+    const newAcc = { ...acc };
     uniqueKeys.forEach((key) => {
       const val1 = object1[key];
       const val2 = object2[key];
 
       // case both objects
       if (isObject(val1) && isObject(val2)) {
-        acc[key] = iter({}, val1, val2);
+        newAcc[key] = iter({}, val1, val2);
       } else if (
         // case one object, one primitive
         (val2 !== undefined && isObject(val1) && !isObject(val2))
         || (val1 !== undefined && isObject(val2) && !isObject(val1))
       ) {
-        acc.diffAddedProperties = { ...acc.diffAddedProperties, [key]: val2 };
-        acc.diffRemovedProperties = { ...acc.diffRemovedProperties, [key]: val1 };
+        newAcc.diffAddedProperties = { ...newAcc.diffAddedProperties, [key]: val2 };
+        newAcc.diffRemovedProperties = { ...newAcc.diffRemovedProperties, [key]: val1 };
       } else if (val1 === val2) {
       // case both primitives
-        acc[key] = val1;
+        newAcc[key] = val1;
       } else if (val1 === undefined) {
-        acc.diffAddedProperties = { ...acc.diffAddedProperties, [key]: val2 };
+        newAcc.diffAddedProperties = { ...newAcc.diffAddedProperties, [key]: val2 };
       } else if (val2 === undefined) {
-        acc.diffRemovedProperties = { ...acc.diffRemovedProperties, [key]: val1 };
+        newAcc.diffRemovedProperties = { ...newAcc.diffRemovedProperties, [key]: val1 };
       } else {
-        acc.diffAddedProperties = { ...acc.diffAddedProperties, [key]: val2 };
-        acc.diffRemovedProperties = { ...acc.diffRemovedProperties, [key]: val1 };
+        newAcc.diffAddedProperties = { ...newAcc.diffAddedProperties, [key]: val2 };
+        newAcc.diffRemovedProperties = { ...newAcc.diffRemovedProperties, [key]: val1 };
       }
     });
 
-    return acc;
+    return newAcc;
   };
 
   return iter({}, inputObj1, inputObj2);
