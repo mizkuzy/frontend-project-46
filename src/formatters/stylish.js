@@ -76,11 +76,6 @@ const stylish = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
       equalProperties,
     );
 
-    console.log('depth', depth);
-    console.log('sortedUniqueKeys', sortedUniqueKeys);
-    console.log('addedProperties', addedProperties);
-    console.log('removedProperties', removedProperties);
-    console.log('equalProperties', equalProperties);
     const lines = [];
 
     sortedUniqueKeys.forEach((key) => {
@@ -96,11 +91,6 @@ const stylish = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
         removedProperties,
       );
 
-      console.log('key', key);
-      console.log('isPropExistInBothFiles', isPropExistInBothFiles);
-      console.log('isValueUpdated', isValueUpdated);
-      console.log('isValueAdded', isValueAdded);
-      console.log('isValueRemoved', isValueRemoved);
       if (isPropExistInBothFiles) {
         const value = equalProperties[key];
 
@@ -109,13 +99,10 @@ const stylish = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
         const addedValue = addedProperties[key];
         const removedValue = removedProperties[key];
 
-        console.log('0');
         if (!isObject(addedValue) && !isObject(removedValue)) {
-          console.log('1');
           lines.push(createPrimitivePropLine(key, removedValue, indentWithDiffCount, false));
           lines.push(createPrimitivePropLine(key, addedValue, indentWithDiffCount, true));
         } else if (isObject(addedValue) && !isObject(removedValue)) {
-          console.log('2');
           const {
             diffAddedProperties: addedProps,
             diffRemovedProperties: removedProps,
@@ -128,10 +115,7 @@ const stylish = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
           lines.push(createObjectPropLine(key, indentWithDiffCount, true, true));
           lines.push(innerLines);
           lines.push(createObjectPropLine(key, indentWithoutDiffCount, false));
-
-          console.log('innerLines', innerLines);
         } else if (!isObject(addedValue) && isObject(removedValue)) {
-          console.log('3');
           const {
             diffAddedProperties: addedProps,
             diffRemovedProperties: removedProps,
@@ -147,12 +131,10 @@ const stylish = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
           lines.push(createPrimitivePropLine(key, addedValue, indentWithDiffCount, true));
         }
       } else if (isValueAdded) {
-        console.log('4');
         const addedValue = addedProperties[key];
 
         addLines(depth, key, addedValue, iter, lines, true);
       } else if (isValueRemoved) {
-        console.log('5');
         const removedValue = removedProperties[key];
 
         addLines(depth, key, removedValue, iter, lines, false);
