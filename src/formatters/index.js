@@ -10,6 +10,10 @@ const getFormattedDiff = (diff, type) => {
     return plain(diff);
   }
 
+  if (type === 'json') {
+    return JSON.stringify(diff);
+  }
+
   throw new Error('Unexpected format type');
 };
 

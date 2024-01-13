@@ -42,4 +42,14 @@ describe.each(CASES)('gendiff for extension %s', (extension) => {
 
     expect(actual).toEqual(expected);
   });
+
+  test('JSON format nested objects', () => {
+    const file1Path = getFixturePath(`nested1.${extension}`);
+    const file2Path = getFixturePath(`nested2.${extension}`);
+
+    const actual = generateDifference(file1Path, file2Path, 'json');
+    const expected = readFile('jsonFormatResult');
+
+    expect(actual).toEqual(expected);
+  });
 });

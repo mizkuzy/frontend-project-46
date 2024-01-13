@@ -4,69 +4,6 @@ import uniq from 'lodash.uniq';
 import parseFiles from './parser.js';
 import getFormattedDiff from './formatters/index.js';
 
-// const obj = {
-//   "common": {
-//     "setting1": "Value 1",
-//     "diffRemovedProperties": {
-//       "setting2": 200,
-//       "setting3": true
-//     },
-//     "diffAddedProperties": {
-//       "setting3": null,
-//       "follow": false,
-//       "setting4": "blah blah",
-//       "setting5": {
-//         "key5": "value5"
-//       }
-//     },
-//     "setting6": {
-//       "key": "value",
-//       "doge": {
-//         "diffAddedProperties": {
-//           "wow": "so much"
-//         },
-//         "diffRemovedProperties": {
-//           "wow": ""
-//         }
-//       },
-//       "diffAddedProperties": {
-//         "ops": "vops"
-//       }
-//     }
-//   },
-//   "group1": {
-//     "diffAddedProperties": {
-//       "baz": "bars",
-//       "nest": "str"
-//     },
-//     "diffRemovedProperties": {
-//       "baz": "bas",
-//       "nest": {
-//         "key": "value"
-//       }
-//     },
-//     "foo": "bar"
-//   },
-//   "diffRemovedProperties": {
-//     "group2": {
-//       "abc": 12345,
-//       "deep": {
-//         "id": 45
-//       }
-//     }
-//   },
-//   "diffAddedProperties": {
-//     "group3": {
-//       "deep": {
-//         "id": {
-//           "number": 45
-//         }
-//       },
-//       "fee": 100500
-//     }
-//   }
-// }
-
 const getDiff = (inputObj1, inputObj2) => {
   const iter = (acc, object1, object2) => {
     const keys = [...Object.keys(object1), ...Object.keys(object2)];
