@@ -19,6 +19,6 @@ const parseFile = (filePath) => {
   }
 };
 
-const parseFiles = (...args) => args.map(parseFile);
+const parseFiles = (file1, file2) => [parseFile(file1), parseFile(file2)];
 
 export default parseFiles;
