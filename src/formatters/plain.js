@@ -1,4 +1,5 @@
 import isObject from 'lodash.isobject';
+import omit from 'lodash.omit';
 import { getPropStatus, getSortedUniqueKeys } from './helpers.js';
 
 const formatValue = (value) => {
@@ -30,7 +31,10 @@ const createLine = (property, from, to, isAdded, isRemoved) => {
   return `Property '${property}' was removed`;
 };
 
-const plain = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
+const plain = (diffObject) => {
+  const { diffAddedProperties, diffRemovedProperties } = diffObject;
+  const rest = omit(diffObject, ['diffAddedProperties', 'diffRemovedProperties']);
+
   const iter = (
     parentPropNames,
     addedProperties = {},
@@ -43,9 +47,7 @@ const plain = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
       equalProperties,
     );
 
-    const lines = [];
-
-    sortedUniqueKeys.forEach((key) => {
+    return sortedUniqueKeys.reduce((acc, key) => {
       const propPath = [...parentPropNames, key].join('.');
 
       const {
@@ -67,18 +69,23 @@ const plain = ({ diffAddedProperties, diffRemovedProperties, ...rest }) => {
           const {
             diffAddedProperties: addedProps,
             diffRemovedProperties: removedProps,
-            ...innerRest
           } = value;
+          const innerRest = omit(value, ['diffAddedProperties', 'diffRemovedProperties']);
 
           const innerLines = iter([...parentPropNames, key], addedProps, removedProps, innerRest);
-          lines.push(...innerLines);
+
+          return [
+            ...acc, ...innerLines,
+          ];
         }
       } else {
-        lines.push(createLine(propPath, removedValue, addedValue, isValueAdded, isValueRemoved));
+        return [
+          ...acc, createLine(propPath, removedValue, addedValue, isValueAdded, isValueRemoved),
+        ];
       }
-    });
 
-    return lines;
+      return acc;
+    }, []);
   };
 
   const result = iter([], diffAddedProperties, diffRemovedProperties, rest);
