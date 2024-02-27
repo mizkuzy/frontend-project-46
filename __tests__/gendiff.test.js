@@ -3,7 +3,7 @@ import { describe, expect, test } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import generateDifference from '../src/gendiff.js';
+import genDiff from '../src/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,7 +17,7 @@ describe.each(CASES)('gendiff for extension %s', (extension) => {
     const file1Path = getFixturePath(`plain1.${extension}`);
     const file2Path = getFixturePath(`plain2.${extension}`);
 
-    const actual = generateDifference(file1Path, file2Path, 'stylish');
+    const actual = genDiff(file1Path, file2Path, 'stylish');
     const expected = readFile('stylishPlainJsonsResult');
 
     expect(actual).toEqual(expected);
@@ -27,7 +27,7 @@ describe.each(CASES)('gendiff for extension %s', (extension) => {
     const file1Path = getFixturePath(`nested1.${extension}`);
     const file2Path = getFixturePath(`nested2.${extension}`);
 
-    const actual = generateDifference(file1Path, file2Path);
+    const actual = genDiff(file1Path, file2Path);
     const expected = readFile('stylishNestedJsonsResult');
 
     expect(actual).toEqual(expected);
@@ -37,7 +37,7 @@ describe.each(CASES)('gendiff for extension %s', (extension) => {
     const file1Path = getFixturePath(`nested1.${extension}`);
     const file2Path = getFixturePath(`nested2.${extension}`);
 
-    const actual = generateDifference(file1Path, file2Path, 'stylish');
+    const actual = genDiff(file1Path, file2Path, 'stylish');
     const expected = readFile('stylishNestedJsonsResult');
 
     expect(actual).toEqual(expected);
@@ -47,7 +47,7 @@ describe.each(CASES)('gendiff for extension %s', (extension) => {
     const file1Path = getFixturePath(`nested1.${extension}`);
     const file2Path = getFixturePath(`nested2.${extension}`);
 
-    const actual = generateDifference(file1Path, file2Path, 'plain');
+    const actual = genDiff(file1Path, file2Path, 'plain');
     const expected = readFile('plainNestedJsonsResult');
 
     expect(actual).toEqual(expected);
@@ -57,7 +57,7 @@ describe.each(CASES)('gendiff for extension %s', (extension) => {
     const file1Path = getFixturePath(`nested1.${extension}`);
     const file2Path = getFixturePath(`nested2.${extension}`);
 
-    const actual = generateDifference(file1Path, file2Path, 'json');
+    const actual = genDiff(file1Path, file2Path, 'json');
     const expected = readFile('jsonFormatResult');
 
     expect(actual).toEqual(expected);
