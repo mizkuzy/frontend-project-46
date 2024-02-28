@@ -1,9 +1,8 @@
-import isObject from 'lodash.isobject';
-import omit from 'lodash.omit';
+import _ from 'lodash';
 import { getPropStatus, getSortedUniqueKeys } from './helpers.js';
 
 const formatValue = (value) => {
-  if (isObject(value)) {
+  if (_.isPlainObject(value)) {
     return '[complex value]';
   }
 
@@ -33,7 +32,7 @@ const createLine = (property, from, to, isAdded, isRemoved) => {
 
 const plain = (diffObject) => {
   const { diffAddedProperties, diffRemovedProperties } = diffObject;
-  const rest = omit(diffObject, ['diffAddedProperties', 'diffRemovedProperties']);
+  const rest = _.omit(diffObject, ['diffAddedProperties', 'diffRemovedProperties']);
 
   const iter = (
     parentPropNames,
@@ -65,12 +64,12 @@ const plain = (diffObject) => {
       if (isPropExistInBothFiles) {
         const value = equalProperties[key];
 
-        if (isObject(value)) {
+        if (_.isPlainObject(value)) {
           const {
             diffAddedProperties: addedProps,
             diffRemovedProperties: removedProps,
           } = value;
-          const innerRest = omit(value, ['diffAddedProperties', 'diffRemovedProperties']);
+          const innerRest = _.omit(value, ['diffAddedProperties', 'diffRemovedProperties']);
 
           const innerLines = iter([...parentPropNames, key], addedProps, removedProps, innerRest);
 

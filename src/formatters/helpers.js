@@ -1,5 +1,4 @@
-import uniq from 'lodash.uniq';
-import sortBy from 'lodash.sortby';
+import _ from 'lodash';
 
 const getSortedUniqueKeys = (obj1 = {}, obj2 = {}, obj3 = {}) => {
   const keys = [
@@ -8,9 +7,9 @@ const getSortedUniqueKeys = (obj1 = {}, obj2 = {}, obj3 = {}) => {
     ...Object.keys(obj3),
   ];
 
-  const uniqueKeys = uniq(keys);
+  const uniqueKeys = _.uniq(keys);
 
-  return sortBy(uniqueKeys);
+  return _.sortBy(uniqueKeys);
 };
 
 const getPropStatus = (key, equalProperties = {}, addedProperties = {}, removedProperties = {}) => {

@@ -1,61 +1,65 @@
-import isObject from 'lodash.isobject';
-import uniq from 'lodash.uniq';
+import _ from 'lodash';
 
 const getDiff = (inputObj1, inputObj2) => {
-  const iter = (diffObject, object1, object2) => {
-    const keys = [...Object.keys(object1), ...Object.keys(object2)];
-    const uniqueKeys = uniq(keys);
+  const iter = (node1 = {}, node2 = {}) => {
+    const keys = [...Object.keys(node1), ...Object.keys(node2)];
+    const uniqueKeys = _.uniq(keys);
 
-    return uniqueKeys.reduce((accumulator, key) => {
-      const val1 = object1[key];
-      const val2 = object2[key];
+    return uniqueKeys.reduce((acc, key) => {
+      const val1 = node1[key];
+      const val2 = node2[key];
 
-      // case both objects
-      if (isObject(val1) && isObject(val2)) {
-        return {
-          ...accumulator, [key]: iter({}, val1, val2),
-        };
+      if (_.isPlainObject(val2)) {
+        return [
+          ...acc, {
+            key,
+            type: 'nested',
+            children: iter(val1, val2),
+          },
+        ];
       }
-      if (
-        // case one object, one primitive
-        (val2 !== undefined && isObject(val1) && !isObject(val2))
-        || (val1 !== undefined && isObject(val2) && !isObject(val1))
-      ) {
-        return {
-          ...accumulator,
-          diffAddedProperties: { ...accumulator.diffAddedProperties, [key]: val2 },
-          diffRemovedProperties: { ...accumulator.diffRemovedProperties, [key]: val1 },
-        };
+      if (!_.has(node1, key)) {
+        return [
+          ...acc, {
+            key,
+            type: 'added',
+            value: val2,
+          },
+        ];
       }
+
+      if (!_.has(node2, key)) {
+        return [
+          ...acc, {
+            key,
+            type: 'deleted',
+            value: val1,
+          },
+        ];
+      }
+
       if (val1 === val2) {
-        // case both primitives
-        return {
-          ...accumulator,
-          [key]: val1,
-        };
-      }
-      if (val1 === undefined) {
-        return {
-          ...accumulator,
-          diffAddedProperties: { ...accumulator.diffAddedProperties, [key]: val2 },
-        };
-      }
-      if (val2 === undefined) {
-        return {
-          ...accumulator,
-          diffRemovedProperties: { ...accumulator.diffRemovedProperties, [key]: val1 },
-        };
+        return [
+          ...acc, {
+            key,
+            type: 'unchanged',
+            value: val1,
+          },
+        ];
       }
 
-      return {
-        ...accumulator,
-        diffAddedProperties: { ...accumulator.diffAddedProperties, [key]: val2 },
-        diffRemovedProperties: { ...accumulator.diffRemovedProperties, [key]: val1 },
-      };
-    }, diffObject);
+      return [
+        ...acc, {
+          key,
+          type: 'changed',
+          value: val2,
+          oldValue: val1,
+        },
+      ];
+    }, []);
   };
 
-  return iter({}, inputObj1, inputObj2);
+  return iter(inputObj1, inputObj2);
 };
 
 export default getDiff;

@@ -1,5 +1,4 @@
-import isObject from 'lodash.isobject';
-import omit from 'lodash.omit';
+import _ from 'lodash';
 import { getPropStatus, getSortedUniqueKeys } from './helpers.js';
 
 const BASE_INDENT_COUNT = 4;
@@ -36,13 +35,13 @@ const addLines = (depth, key, value, iter, lines, isAdded) => {
   const indentWithoutDiffCount = BASE_INDENT_COUNT * depth;
   const indentWithDiffCount = indentWithoutDiffCount - HAS_DIFF_INDENT_COUNT;
 
-  if (isObject(value)) {
+  if (_.isPlainObject(value)) {
     const {
       diffAddedProperties: addedProps,
       diffRemovedProperties: removedProps,
     } = value;
 
-    const innerRest = omit(value, ['diffAddedProperties', 'diffRemovedProperties']);
+    const innerRest = _.omit(value, ['diffAddedProperties', 'diffRemovedProperties']);
     const innerLines = iter(depth + 1, addedProps, removedProps, innerRest);
 
     return [
@@ -71,7 +70,7 @@ const addLines = (depth, key, value, iter, lines, isAdded) => {
 
 const stylish = (diffObj) => {
   const { diffAddedProperties, diffRemovedProperties } = diffObj;
-  const rest = omit(diffObj, ['diffAddedProperties', 'diffRemovedProperties']);
+  const rest = _.omit(diffObj, ['diffAddedProperties', 'diffRemovedProperties']);
 
   const iter = (depth, addedProperties = {}, removedProperties = {}, equalProperties = {}) => {
     const sortedUniqueKeys = getSortedUniqueKeys(
@@ -102,7 +101,7 @@ const stylish = (diffObj) => {
         const addedValue = addedProperties[key];
         const removedValue = removedProperties[key];
 
-        if (!isObject(addedValue) && !isObject(removedValue)) {
+        if (!_.isPlainObject(addedValue) && !_.isPlainObject(removedValue)) {
           return [
             ...lines,
             createPrimitivePropLine(key, removedValue, indentWithDiffCount, false),
@@ -110,13 +109,13 @@ const stylish = (diffObj) => {
           ];
         }
 
-        if (isObject(addedValue) && !isObject(removedValue)) {
+        if (_.isPlainObject(addedValue) && !_.isPlainObject(removedValue)) {
           const {
             diffAddedProperties: addedProps,
             diffRemovedProperties: removedProps,
           } = addedValue;
 
-          const innerRest = omit(addedValue, ['diffAddedProperties', 'diffRemovedProperties']);
+          const innerRest = _.omit(addedValue, ['diffAddedProperties', 'diffRemovedProperties']);
 
           const innerLines = iter(depth + 1, addedProps, removedProps, innerRest);
 
@@ -129,13 +128,13 @@ const stylish = (diffObj) => {
           ];
         }
 
-        if (!isObject(addedValue) && isObject(removedValue)) {
+        if (!_.isPlainObject(addedValue) && _.isPlainObject(removedValue)) {
           const {
             diffAddedProperties: addedProps,
             diffRemovedProperties: removedProps,
           } = removedValue;
 
-          const innerRest = omit(removedValue, ['diffAddedProperties', 'diffRemovedProperties']);
+          const innerRest = _.omit(removedValue, ['diffAddedProperties', 'diffRemovedProperties']);
 
           const innerLines = iter(depth + 1, addedProps, removedProps, innerRest);
 
