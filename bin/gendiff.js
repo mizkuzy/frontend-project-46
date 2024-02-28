@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import generateDifference from '../src/gendiff.js';
+import genDiff from '../src/index.js';
 
 const program = new Command();
 
@@ -13,7 +13,7 @@ program
   .action((fp1, fp2) => {
     const { format } = program.opts();
 
-    const jsonsDiff = generateDifference(fp1, fp2, format);
+    const jsonsDiff = genDiff(fp1, fp2, format);
 
     console.log(jsonsDiff);
   });
