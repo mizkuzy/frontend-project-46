@@ -3,27 +3,18 @@ import _ from 'lodash';
 const BASE_INDENT_COUNT = 4;
 const SHIFT = 2;
 
-const getDifferenceSign = (noSign, isAdded) => {
-  if (noSign) {
-    return undefined;
-  }
-
-  return isAdded ? '+' : '-';
-};
-
-const getBeforePropSign = (differenceSign) => (differenceSign ? `${differenceSign} ` : '');
-
 const getIndent = (indentsCount) => ' '.repeat(indentsCount);
 
-const createLine = (key, value, isObject, indentsCount, noSign, isAdded) => {
+const createLine = (key, value, isObject, indentsCount, sign) => {
   const indent = getIndent(indentsCount);
-  const differenceSign = getDifferenceSign(noSign, isAdded);
+
+  const beforeProp = sign ? `${sign} ` : '';
 
   if (isObject) {
-    return `${indent}${getBeforePropSign(differenceSign)}${key}: {`;
+    return `${indent}${beforeProp}${key}: {`;
   }
 
-  return `${indent}${getBeforePropSign(differenceSign)}${key}: ${String(value)}`;
+  return `${indent}${beforeProp}${key}: ${String(value)}`;
 };
 
 const createCloseObjectPropLine = (indentsCount) => {
@@ -45,8 +36,8 @@ function transformObjectToLine(value, indentsCount) {
     .join('\n');
 }
 
-function getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, isAdded) {
-  const openLine = createLine(key, undefined, true, indentWithChangeCount, false, isAdded);
+function getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, sign) {
+  const openLine = createLine(key, undefined, true, indentWithChangeCount, sign);
   const closeLine = createCloseObjectPropLine(indentWithoutChangeCount);
   const line = transformObjectToLine(value, indentWithoutChangeCount);
 
@@ -65,7 +56,7 @@ const stylish = (diffNodes) => {
     }) => {
       switch (type) {
         case 'nested': {
-          const openLine = createLine(key, undefined, true, indentWithoutChangeCount, true);
+          const openLine = createLine(key, undefined, true, indentWithoutChangeCount);
           const nodeChildren = iter(depth + 1, children);
           const closeLine = createCloseObjectPropLine(indentWithoutChangeCount);
 
@@ -82,7 +73,7 @@ const stylish = (diffNodes) => {
               openLine,
               closeLine,
               line,
-            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, true);
+            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, '+');
 
             return [
               ...acc,
@@ -92,7 +83,7 @@ const stylish = (diffNodes) => {
             ];
           }
 
-          const line = createLine(key, value, false, indentWithChangeCount, false, true);
+          const line = createLine(key, value, false, indentWithChangeCount, '+');
           return [
             ...acc,
             line,
@@ -104,7 +95,7 @@ const stylish = (diffNodes) => {
               openLine,
               closeLine,
               line,
-            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, false);
+            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, '-');
 
             return [
               ...acc,
@@ -114,7 +105,7 @@ const stylish = (diffNodes) => {
             ];
           }
 
-          const line = createLine(key, value, false, indentWithChangeCount, false, false);
+          const line = createLine(key, value, false, indentWithChangeCount, '-');
           return [
             ...acc,
             line,
@@ -126,15 +117,14 @@ const stylish = (diffNodes) => {
               openLine,
               closeLine,
               line: addedLine,
-            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, true);
+            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, '+');
 
             const removedLine = createLine(
               key,
               value,
               false,
               indentWithChangeCount,
-              false,
-              false,
+              '-',
             );
 
             return [
@@ -151,15 +141,14 @@ const stylish = (diffNodes) => {
               openLine,
               closeLine,
               line: removedLine,
-            } = getLines(key, oldValue, indentWithChangeCount, indentWithoutChangeCount, false);
+            } = getLines(key, oldValue, indentWithChangeCount, indentWithoutChangeCount, '-');
 
             const addedLine = createLine(
               key,
               value,
               false,
               indentWithChangeCount,
-              false,
-              true,
+              '+',
             );
 
             return [
@@ -171,8 +160,8 @@ const stylish = (diffNodes) => {
             ];
           }
 
-          const removedProp = createLine(key, oldValue, false, indentWithChangeCount, false, false);
-          const addedProp = createLine(key, value, false, indentWithChangeCount, false, true);
+          const removedProp = createLine(key, oldValue, false, indentWithChangeCount, '-');
+          const addedProp = createLine(key, value, false, indentWithChangeCount, '+');
 
           return [
             ...acc,
@@ -182,7 +171,7 @@ const stylish = (diffNodes) => {
         }
         // unchanged
         default: {
-          const line = createLine(key, value, false, indentWithoutChangeCount, true);
+          const line = createLine(key, value, false, indentWithoutChangeCount);
           return [
             ...acc,
             line,
