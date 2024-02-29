@@ -1,166 +1,200 @@
 import _ from 'lodash';
-import { getPropStatus, getSortedUniqueKeys } from './helpers.js';
 
 const BASE_INDENT_COUNT = 4;
-const HAS_DIFF_INDENT_COUNT = 2;
+const SHIFT = 2;
 
-const getDifferenceSign = (isAdded) => {
-  switch (isAdded) {
-    case true:
-      return '+';
-    case false:
-      return '-';
-    default:
-      return undefined;
+const getDifferenceSign = (noSign, isAdded) => {
+  if (noSign) {
+    return undefined;
   }
+
+  return isAdded ? '+' : '-';
 };
 
 const getBeforePropSign = (differenceSign) => (differenceSign ? `${differenceSign} ` : '');
 
-const createPrimitivePropLine = (key, value, indentsCount, isAdded) => {
-  const indent = ' '.repeat(indentsCount);
-  const differenceSign = getDifferenceSign(isAdded);
+const getIndent = (indentsCount) => ' '.repeat(indentsCount);
+
+const createLine = (key, value, isObject, indentsCount, noSign, isAdded) => {
+  const indent = getIndent(indentsCount);
+  const differenceSign = getDifferenceSign(noSign, isAdded);
+
+  if (isObject) {
+    return `${indent}${getBeforePropSign(differenceSign)}${key}: {`;
+  }
 
   return `${indent}${getBeforePropSign(differenceSign)}${key}: ${String(value)}`;
 };
 
-const createObjectPropLine = (key, indentsCount, isOpen, isAdded) => {
+const createCloseObjectPropLine = (indentsCount) => {
   const indent = ' '.repeat(indentsCount);
-  const differenceSign = getDifferenceSign(isAdded);
 
-  return isOpen ? `${indent}${getBeforePropSign(differenceSign)}${key}: {` : `${indent}}`;
+  return `${indent}}`;
 };
 
-const addLines = (depth, key, value, iter, lines, isAdded) => {
-  const indentWithoutDiffCount = BASE_INDENT_COUNT * depth;
-  const indentWithDiffCount = indentWithoutDiffCount - HAS_DIFF_INDENT_COUNT;
+function transformObjectToLine(value, indentsCount) {
+  const strings = JSON.stringify(value, null, BASE_INDENT_COUNT)
+    .replaceAll('"', '')
+    .split('\n')
+    .map((str) => (str.endsWith(',') ? str.slice(0, str.length - 1) : str))
+    .map((str) => `${getIndent(indentsCount)}${str}`);
 
-  if (_.isPlainObject(value)) {
-    const {
-      diffAddedProperties: addedProps,
-      diffRemovedProperties: removedProps,
-    } = value;
+  // need to remove open and close prop with brackets to set indents manually
+  return strings
+    .slice(1, strings.length - 1)
+    .join('\n');
+}
 
-    const innerRest = _.omit(value, ['diffAddedProperties', 'diffRemovedProperties']);
-    const innerLines = iter(depth + 1, addedProps, removedProps, innerRest);
+function getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, isAdded) {
+  const openLine = createLine(key, undefined, true, indentWithChangeCount, false, isAdded);
+  const closeLine = createCloseObjectPropLine(indentWithoutChangeCount);
+  const line = transformObjectToLine(value, indentWithoutChangeCount);
 
-    return [
-      ...lines,
-      createObjectPropLine(
-        key,
-        isAdded === undefined ? indentWithoutDiffCount : indentWithDiffCount,
-        true,
-        isAdded,
-      ),
-      innerLines,
-      createObjectPropLine(key, indentWithoutDiffCount, false, isAdded),
-    ];
-  }
+  return { openLine, closeLine, line };
+}
 
-  return [
-    ...lines,
-    createPrimitivePropLine(
-      key,
-      value,
-      isAdded === undefined ? indentWithoutDiffCount : indentWithDiffCount,
-      isAdded,
-    ),
-  ];
-};
+const stylish = (diffNodes) => {
+  const iter = (depth, diffNodesInner) => {
+    const indentWithoutChangeCount = BASE_INDENT_COUNT * depth;
+    const indentWithChangeCount = indentWithoutChangeCount - SHIFT;
 
-const stylish = (diffObj) => {
-  const { diffAddedProperties, diffRemovedProperties } = diffObj;
-  const rest = _.omit(diffObj, ['diffAddedProperties', 'diffRemovedProperties']);
+    const nodesSorted = _.sortBy(diffNodesInner, (el) => el.key);
 
-  const iter = (depth, addedProperties = {}, removedProperties = {}, equalProperties = {}) => {
-    const sortedUniqueKeys = getSortedUniqueKeys(
-      addedProperties,
-      removedProperties,
-      equalProperties,
-    );
+    const result = nodesSorted.reduce((acc, {
+      key, type, value, oldValue, children,
+    }) => {
+      switch (type) {
+        case 'nested': {
+          const openLine = createLine(key, undefined, true, indentWithoutChangeCount, true);
+          const nodeChildren = iter(depth + 1, children);
+          const closeLine = createCloseObjectPropLine(indentWithoutChangeCount);
 
-    const result = sortedUniqueKeys.reduce((lines, key) => {
-      const indentWithoutDiffCount = BASE_INDENT_COUNT * depth;
-      const indentWithDiffCount = indentWithoutDiffCount - HAS_DIFF_INDENT_COUNT;
+          return [
+            ...acc,
+            openLine,
+            nodeChildren,
+            closeLine,
+          ];
+        }
+        case 'added': {
+          if (_.isPlainObject(value)) {
+            const {
+              openLine,
+              closeLine,
+              line,
+            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, true);
 
-      const {
-        isPropExistInBothFiles, isValueUpdated, isValueAdded, isValueRemoved,
-      } = getPropStatus(
-        key,
-        equalProperties,
-        addedProperties,
-        removedProperties,
-      );
+            return [
+              ...acc,
+              openLine,
+              line,
+              closeLine,
+            ];
+          }
 
-      if (isPropExistInBothFiles) {
-        const value = equalProperties[key];
-        return addLines(depth, key, value, iter, lines);
+          const line = createLine(key, value, false, indentWithChangeCount, false, true);
+          return [
+            ...acc,
+            line,
+          ];
+        }
+        case 'deleted': {
+          if (_.isPlainObject(value)) {
+            const {
+              openLine,
+              closeLine,
+              line,
+            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, false);
+
+            return [
+              ...acc,
+              openLine,
+              line,
+              closeLine,
+            ];
+          }
+
+          const line = createLine(key, value, false, indentWithChangeCount, false, false);
+          return [
+            ...acc,
+            line,
+          ];
+        }
+        case 'changed': {
+          if (_.isPlainObject(value)) {
+            const {
+              openLine,
+              closeLine,
+              line: addedLine,
+            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, true);
+
+            const removedLine = createLine(
+              key,
+              value,
+              false,
+              indentWithChangeCount,
+              false,
+              false,
+            );
+
+            return [
+              ...acc,
+              removedLine,
+              openLine,
+              addedLine,
+              closeLine,
+            ];
+          }
+
+          if (_.isPlainObject(oldValue)) {
+            const {
+              openLine,
+              closeLine,
+              line: removedLine,
+            } = getLines(key, oldValue, indentWithChangeCount, indentWithoutChangeCount, false);
+
+            const addedLine = createLine(
+              key,
+              value,
+              false,
+              indentWithChangeCount,
+              false,
+              true,
+            );
+
+            return [
+              ...acc,
+              openLine,
+              removedLine,
+              closeLine,
+              addedLine,
+            ];
+          }
+
+          const removedProp = createLine(key, oldValue, false, indentWithChangeCount, false, false);
+          const addedProp = createLine(key, value, false, indentWithChangeCount, false, true);
+
+          return [
+            ...acc,
+            removedProp,
+            addedProp,
+          ];
+        }
+        // unchanged
+        default: {
+          const line = createLine(key, value, false, indentWithoutChangeCount, true);
+          return [
+            ...acc,
+            line,
+          ];
+        }
       }
-
-      if (isValueUpdated) {
-        const addedValue = addedProperties[key];
-        const removedValue = removedProperties[key];
-
-        if (!_.isPlainObject(addedValue) && !_.isPlainObject(removedValue)) {
-          return [
-            ...lines,
-            createPrimitivePropLine(key, removedValue, indentWithDiffCount, false),
-            createPrimitivePropLine(key, addedValue, indentWithDiffCount, true),
-          ];
-        }
-
-        if (_.isPlainObject(addedValue) && !_.isPlainObject(removedValue)) {
-          const {
-            diffAddedProperties: addedProps,
-            diffRemovedProperties: removedProps,
-          } = addedValue;
-
-          const innerRest = _.omit(addedValue, ['diffAddedProperties', 'diffRemovedProperties']);
-
-          const innerLines = iter(depth + 1, addedProps, removedProps, innerRest);
-
-          return [
-            ...lines,
-            createPrimitivePropLine(key, removedValue, indentWithDiffCount, false),
-            createObjectPropLine(key, indentWithDiffCount, true, true),
-            innerLines,
-            createObjectPropLine(key, indentWithoutDiffCount, false),
-          ];
-        }
-
-        if (!_.isPlainObject(addedValue) && _.isPlainObject(removedValue)) {
-          const {
-            diffAddedProperties: addedProps,
-            diffRemovedProperties: removedProps,
-          } = removedValue;
-
-          const innerRest = _.omit(removedValue, ['diffAddedProperties', 'diffRemovedProperties']);
-
-          const innerLines = iter(depth + 1, addedProps, removedProps, innerRest);
-
-          return [
-            ...lines,
-            createObjectPropLine(key, indentWithDiffCount, true, false),
-            innerLines,
-            createObjectPropLine(key, indentWithoutDiffCount, false),
-            createPrimitivePropLine(key, addedValue, indentWithDiffCount, true),
-          ];
-        }
-      } else if (isValueAdded) {
-        const addedValue = addedProperties[key];
-        return addLines(depth, key, addedValue, iter, lines, true);
-      } else if (isValueRemoved) {
-        const removedValue = removedProperties[key];
-        return addLines(depth, key, removedValue, iter, lines, false);
-      }
-
-      return lines;
     }, []);
 
     return result.join('\n');
   };
 
-  const result = iter(1, diffAddedProperties, diffRemovedProperties, rest);
+  const result = iter(1, diffNodes);
 
   return [
     '{',

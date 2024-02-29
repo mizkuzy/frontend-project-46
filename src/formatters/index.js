@@ -2,6 +2,8 @@ import stylish from './stylish.js';
 import plain from './plain.js';
 
 const getFormattedDiff = (diff, type) => {
+  // console.log('diff', JSON.stringify(diff, null, 2));
+
   if (type === 'stylish') {
     return stylish(diff);
   }

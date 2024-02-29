@@ -1,11 +1,7 @@
 import _ from 'lodash';
 
-const getSortedUniqueKeys = (obj1 = {}, obj2 = {}, obj3 = {}) => {
-  const keys = [
-    ...Object.keys(obj1),
-    ...Object.keys(obj2),
-    ...Object.keys(obj3),
-  ];
+const getSortedUniqueKeys = (arr) => {
+  const keys = arr.map(({ key }) => key);
 
   const uniqueKeys = _.uniq(keys);
 

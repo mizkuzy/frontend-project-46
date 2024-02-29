@@ -15,8 +15,7 @@ const genDiff = (fp1, fp2, formatType = 'stylish') => {
 
   const diff = getDiff(json1, json2);
 
-  console.log('diff', diff);
-  // return getFormattedDiff(diff, formatType);
+  return getFormattedDiff(diff, formatType);
 };
 
 export default genDiff;

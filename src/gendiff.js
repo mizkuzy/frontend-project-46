@@ -9,7 +9,7 @@ const getDiff = (inputObj1, inputObj2) => {
       const val1 = node1[key];
       const val2 = node2[key];
 
-      if (_.isPlainObject(val2)) {
+      if (_.isPlainObject(val2) && _.isPlainObject(val1)) {
         return [
           ...acc, {
             key,
