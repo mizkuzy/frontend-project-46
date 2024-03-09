@@ -45,6 +45,8 @@ const createObjectLines = (key, value, indentWithChangeCount, indentWithoutChang
 };
 
 const stylish = (diffNodes) => {
+  console.log('stylish', diffNodes);
+
   const iter = (depth, diffNodesInner) => {
     const currentIndentsCount = BASE_INDENT_COUNT * depth;
     const currentIndentsWithShiftCount = currentIndentsCount - SHIFT;
