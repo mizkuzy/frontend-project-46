@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import { getPropStatus, getSortedUniqueKeys } from './helpers.js';
 
 const formatValue = (value) => {
   if (_.isPlainObject(value)) {
@@ -13,81 +12,53 @@ const formatValue = (value) => {
   return value;
 };
 
-const createLine = (property, from, to, isAdded, isRemoved) => {
+const createLine = (property, type, from, to) => {
   const fromValToPrint = formatValue(from);
   const toValToPrint = formatValue(to);
 
-  const isUpdated = isAdded && isRemoved;
-
-  if (isUpdated) {
-    return `Property '${property}' was updated. From ${fromValToPrint} to ${toValToPrint}`;
+  switch (type) {
+    case 'added':
+      return `Property '${property}' was added with value: ${toValToPrint}`;
+    case 'deleted':
+      return `Property '${property}' was removed`;
+    case 'changed':
+      return `Property '${property}' was updated. From ${fromValToPrint} to ${toValToPrint}`;
+    default:
+      throw new Error('Node type is not supported');
   }
-
-  if (isAdded) {
-    return `Property '${property}' was added with value: ${toValToPrint}`;
-  }
-
-  return `Property '${property}' was removed`;
 };
 
-const plain = (diffObject) => {
-  const { diffAddedProperties, diffRemovedProperties } = diffObject;
-  const rest = _.omit(diffObject, ['diffAddedProperties', 'diffRemovedProperties']);
-
+const plain = (diffNodes) => {
   const iter = (
     parentPropNames,
-    addedProperties = {},
-    removedProperties = {},
-    equalProperties = {},
+    diffNodesInner,
   ) => {
-    const sortedUniqueKeys = getSortedUniqueKeys(
-      addedProperties,
-      removedProperties,
-      equalProperties,
-    );
+    const nodesSorted = _.sortBy(diffNodesInner, (el) => el.key);
 
-    return sortedUniqueKeys.reduce((acc, key) => {
+    return nodesSorted.reduce((acc, {
+      key, type, value, oldValue, children,
+    }) => {
+      if (type === 'unchanged') {
+        return acc;
+      }
+
       const propPath = [...parentPropNames, key].join('.');
 
-      const {
-        isPropExistInBothFiles, isValueAdded, isValueRemoved,
-      } = getPropStatus(
-        key,
-        equalProperties,
-        addedProperties,
-        removedProperties,
-      );
+      if (type === 'nested') {
+        const innerLines = iter([...parentPropNames, key], children);
 
-      const addedValue = addedProperties[key];
-      const removedValue = removedProperties[key];
-
-      if (isPropExistInBothFiles) {
-        const value = equalProperties[key];
-
-        if (_.isPlainObject(value)) {
-          const {
-            diffAddedProperties: addedProps,
-            diffRemovedProperties: removedProps,
-          } = value;
-          const innerRest = _.omit(value, ['diffAddedProperties', 'diffRemovedProperties']);
-
-          const innerLines = iter([...parentPropNames, key], addedProps, removedProps, innerRest);
-
-          return [
-            ...acc, ...innerLines,
-          ];
-        }
-      } else {
         return [
-          ...acc, createLine(propPath, removedValue, addedValue, isValueAdded, isValueRemoved),
+          ...acc, ...innerLines,
         ];
       }
 
-      return acc;
+      return [
+        ...acc, createLine(propPath, type, oldValue, value),
+      ];
     }, []);
   };
 
-  const result = iter([], diffAddedProperties, diffRemovedProperties, rest);
+  const result = iter([], diffNodes);
 
   return result.join('\n');
 };

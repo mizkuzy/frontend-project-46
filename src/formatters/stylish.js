@@ -169,14 +169,15 @@ const stylish = (diffNodes) => {
             addedProp,
           ];
         }
-        // unchanged
-        default: {
+        case 'unchanged': {
           const line = createLine(key, value, false, indentWithoutChangeCount);
           return [
             ...acc,
             line,
           ];
         }
+        default:
+          throw new Error('Node type is not supported');
       }
     }, []);
 
