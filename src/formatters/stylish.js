@@ -126,7 +126,7 @@ const stylish = (diffNodes) => {
 
             const removedLine = createLine(
               key,
-              value,
+              oldValue,
               false,
               currentIndentsWithShiftCount,
               '-',
