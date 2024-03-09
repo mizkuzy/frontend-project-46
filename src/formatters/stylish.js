@@ -23,31 +23,31 @@ const createCloseObjectPropLine = (indentsCount) => {
   return `${indent}}`;
 };
 
-function transformObjectToLine(value, indentsCount) {
-  const strings = JSON.stringify(value, null, BASE_INDENT_COUNT)
+const transformObjectToLines = (obj, indentsCount) => {
+  const strings = JSON.stringify(obj, null, BASE_INDENT_COUNT)
     .replaceAll('"', '')
     .split('\n')
     .map((str) => (str.endsWith(',') ? str.slice(0, str.length - 1) : str))
     .map((str) => `${getIndent(indentsCount)}${str}`);
 
-  // need to remove open and close prop with brackets to set indents manually
+  // need to remove open and close prop with brackets
   return strings
     .slice(1, strings.length - 1)
     .join('\n');
-}
+};
 
-function getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, sign) {
+const createObjectLines = (key, value, indentWithChangeCount, indentWithoutChangeCount, sign) => {
   const openLine = createLine(key, undefined, true, indentWithChangeCount, sign);
   const closeLine = createCloseObjectPropLine(indentWithoutChangeCount);
-  const line = transformObjectToLine(value, indentWithoutChangeCount);
+  const line = transformObjectToLines(value, indentWithoutChangeCount);
 
   return { openLine, closeLine, line };
-}
+};
 
 const stylish = (diffNodes) => {
   const iter = (depth, diffNodesInner) => {
-    const indentWithoutChangeCount = BASE_INDENT_COUNT * depth;
-    const indentWithChangeCount = indentWithoutChangeCount - SHIFT;
+    const currentIndentsCount = BASE_INDENT_COUNT * depth;
+    const currentIndentsWithShiftCount = currentIndentsCount - SHIFT;
 
     const nodesSorted = _.sortBy(diffNodesInner, (el) => el.key);
 
@@ -56,9 +56,10 @@ const stylish = (diffNodes) => {
     }) => {
       switch (type) {
         case 'nested': {
-          const openLine = createLine(key, undefined, true, indentWithoutChangeCount);
+          const openLine = createLine(key, undefined, true, currentIndentsCount);
+          const closeLine = createCloseObjectPropLine(currentIndentsCount);
+
           const nodeChildren = iter(depth + 1, children);
-          const closeLine = createCloseObjectPropLine(indentWithoutChangeCount);
 
           return [
             ...acc,
@@ -73,7 +74,7 @@ const stylish = (diffNodes) => {
               openLine,
               closeLine,
               line,
-            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, '+');
+            } = createObjectLines(key, value, currentIndentsWithShiftCount, currentIndentsCount, '+');
 
             return [
               ...acc,
@@ -83,7 +84,8 @@ const stylish = (diffNodes) => {
             ];
           }
 
-          const line = createLine(key, value, false, indentWithChangeCount, '+');
+          const line = createLine(key, value, false, currentIndentsWithShiftCount, '+');
+
           return [
             ...acc,
             line,
@@ -95,7 +97,7 @@ const stylish = (diffNodes) => {
               openLine,
               closeLine,
               line,
-            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, '-');
+            } = createObjectLines(key, value, currentIndentsWithShiftCount, currentIndentsCount, '-');
 
             return [
               ...acc,
@@ -105,7 +107,8 @@ const stylish = (diffNodes) => {
             ];
           }
 
-          const line = createLine(key, value, false, indentWithChangeCount, '-');
+          const line = createLine(key, value, false, currentIndentsWithShiftCount, '-');
+
           return [
             ...acc,
             line,
@@ -117,13 +120,13 @@ const stylish = (diffNodes) => {
               openLine,
               closeLine,
               line: addedLine,
-            } = getLines(key, value, indentWithChangeCount, indentWithoutChangeCount, '+');
+            } = createObjectLines(key, value, currentIndentsWithShiftCount, currentIndentsCount, '+');
 
             const removedLine = createLine(
               key,
               value,
               false,
-              indentWithChangeCount,
+              currentIndentsWithShiftCount,
               '-',
             );
 
@@ -141,13 +144,13 @@ const stylish = (diffNodes) => {
               openLine,
               closeLine,
               line: removedLine,
-            } = getLines(key, oldValue, indentWithChangeCount, indentWithoutChangeCount, '-');
+            } = createObjectLines(key, oldValue, currentIndentsWithShiftCount, currentIndentsCount, '-');
 
             const addedLine = createLine(
               key,
               value,
               false,
-              indentWithChangeCount,
+              currentIndentsWithShiftCount,
               '+',
             );
 
@@ -160,8 +163,8 @@ const stylish = (diffNodes) => {
             ];
           }
 
-          const removedProp = createLine(key, oldValue, false, indentWithChangeCount, '-');
-          const addedProp = createLine(key, value, false, indentWithChangeCount, '+');
+          const removedProp = createLine(key, oldValue, false, currentIndentsWithShiftCount, '-');
+          const addedProp = createLine(key, value, false, currentIndentsWithShiftCount, '+');
 
           return [
             ...acc,
@@ -169,8 +172,10 @@ const stylish = (diffNodes) => {
             addedProp,
           ];
         }
+
         case 'unchanged': {
-          const line = createLine(key, value, false, indentWithoutChangeCount);
+          const line = createLine(key, value, false, currentIndentsCount);
+
           return [
             ...acc,
             line,
