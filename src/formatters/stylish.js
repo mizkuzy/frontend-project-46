@@ -45,15 +45,13 @@ const createObjectLines = (key, value, indentWithChangeCount, indentWithoutChang
 };
 
 const stylish = (diffNodes) => {
-  // console.log(JSON.stringify(diffNodes, null, 4));
+  console.log(JSON.stringify(diffNodes, null, 4));
 
   const iter = (depth, diffNodesInner) => {
     const currentIndentsCount = BASE_INDENT_COUNT * depth;
     const currentIndentsWithShiftCount = currentIndentsCount - SHIFT;
 
-    const nodesSorted = _.sortBy(diffNodesInner, (el) => el.key);
-
-    const result = nodesSorted.reduce((acc, {
+    const result = diffNodesInner.map(({
       key, type, value, oldValue, children,
     }) => {
       switch (type) {
@@ -64,11 +62,10 @@ const stylish = (diffNodes) => {
           const nodeChildren = iter(depth + 1, children);
 
           return [
-            ...acc,
             openLine,
             nodeChildren,
             closeLine,
-          ];
+          ].join('\n');
         }
         case 'added': {
           if (_.isPlainObject(value)) {
@@ -79,19 +76,13 @@ const stylish = (diffNodes) => {
             } = createObjectLines(key, value, currentIndentsWithShiftCount, currentIndentsCount, '+');
 
             return [
-              ...acc,
               openLine,
               line,
               closeLine,
-            ];
+            ].join('\n');
           }
 
-          const line = createLine(key, value, false, currentIndentsWithShiftCount, '+');
-
-          return [
-            ...acc,
-            line,
-          ];
+          return createLine(key, value, false, currentIndentsWithShiftCount, '+');
         }
         case 'deleted': {
           if (_.isPlainObject(value)) {
@@ -102,19 +93,13 @@ const stylish = (diffNodes) => {
             } = createObjectLines(key, value, currentIndentsWithShiftCount, currentIndentsCount, '-');
 
             return [
-              ...acc,
               openLine,
               line,
               closeLine,
-            ];
+            ].join('\n');
           }
 
-          const line = createLine(key, value, false, currentIndentsWithShiftCount, '-');
-
-          return [
-            ...acc,
-            line,
-          ];
+          return createLine(key, value, false, currentIndentsWithShiftCount, '-');
         }
         case 'changed': {
           if (_.isPlainObject(value)) {
@@ -133,12 +118,11 @@ const stylish = (diffNodes) => {
             );
 
             return [
-              ...acc,
               removedLine,
               openLine,
               addedLine,
               closeLine,
-            ];
+            ].join('\n');
           }
 
           if (_.isPlainObject(oldValue)) {
@@ -157,36 +141,29 @@ const stylish = (diffNodes) => {
             );
 
             return [
-              ...acc,
               openLine,
               removedLine,
               closeLine,
               addedLine,
-            ];
+            ].join('\n');
           }
 
           const removedProp = createLine(key, oldValue, false, currentIndentsWithShiftCount, '-');
           const addedProp = createLine(key, value, false, currentIndentsWithShiftCount, '+');
 
           return [
-            ...acc,
             removedProp,
             addedProp,
-          ];
+          ].join('\n');
         }
 
         case 'unchanged': {
-          const line = createLine(key, value, false, currentIndentsCount);
-
-          return [
-            ...acc,
-            line,
-          ];
+          return createLine(key, value, false, currentIndentsCount);
         }
         default:
-          throw new Error('Node type is not supported');
+          throw new Error(`Node type ${type} is not supported`);
       }
-    }, []);
+    });
 
     return result.join('\n');
   };

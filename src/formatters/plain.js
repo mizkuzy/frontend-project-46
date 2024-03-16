@@ -24,7 +24,7 @@ const createLine = (property, type, from, to) => {
     case 'changed':
       return `Property '${property}' was updated. From ${fromValToPrint} to ${toValToPrint}`;
     default:
-      throw new Error('Node type is not supported');
+      throw new Error(`Node type ${type} is not supported`);
   }
 };
 
@@ -32,31 +32,21 @@ const plain = (diffNodes) => {
   const iter = (
     parentPropNames,
     diffNodesInner,
-  ) => {
-    const nodesSorted = _.sortBy(diffNodesInner, (el) => el.key);
+  ) => diffNodesInner.flatMap(({
+    key, type, value, oldValue, children,
+  }) => {
+    if (type === 'unchanged') {
+      return [];
+    }
 
-    return nodesSorted.reduce((acc, {
-      key, type, value, oldValue, children,
-    }) => {
-      if (type === 'unchanged') {
-        return acc;
-      }
+    const propPath = [...parentPropNames, key].join('.');
 
-      const propPath = [...parentPropNames, key].join('.');
+    if (type === 'nested') {
+      return iter([...parentPropNames, key], children);
+    }
 
-      if (type === 'nested') {
-        const innerLines = iter([...parentPropNames, key], children);
-
-        return [
-          ...acc, ...innerLines,
-        ];
-      }
-
-      return [
-        ...acc, createLine(propPath, type, oldValue, value),
-      ];
-    }, []);
-  };
+    return createLine(propPath, type, oldValue, value);
+  });
 
   const result = iter([], diffNodes);
 
