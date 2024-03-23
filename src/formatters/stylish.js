@@ -1,153 +1,65 @@
-import _ from 'lodash';
-
 const BASE_INDENT_COUNT = 4;
 const SHIFT = 2;
 
 const getIndent = (indentsCount) => ' '.repeat(indentsCount);
 
-const createLine = (key, value, isObject, indentsCount, sign) => {
-  const indent = getIndent(indentsCount);
+const formatValue = (input, indent, space) => {
+  const inputStrings = JSON.stringify(input, null, space)
+    .split('\n');
+
+  if (inputStrings.length === 1) {
+    return input;
+  }
+
+  const firstString = inputStrings[0];
+  const restStrings = inputStrings.slice(1);
+
+  const strings = restStrings
+    .map((str) => (str.endsWith(',') ? str.slice(0, str.length - 1) : str))
+    .map((str) => `${indent}${str}`);
+
+  return [firstString, ...strings].join('\n');
+};
+
+const createLine = (key, value, depth, sign) => {
+  const indentsCount = BASE_INDENT_COUNT * depth;
+  const indentsWithShiftCount = indentsCount - SHIFT;
+
+  const indent = getIndent(sign ? indentsWithShiftCount : indentsCount);
+  const indentWithoutShift = getIndent(indentsCount);
 
   const beforeProp = sign ? `${sign} ` : '';
 
-  if (isObject) {
-    return `${indent}${beforeProp}${key}: {`;
-  }
+  const transformedValue = formatValue(value, indentWithoutShift, BASE_INDENT_COUNT);
 
-  return `${indent}${beforeProp}${key}: ${String(value)}`;
-};
-
-const createCloseObjectPropLine = (indentsCount) => {
-  const indent = ' '.repeat(indentsCount);
-
-  return `${indent}}`;
-};
-
-const transformObjectToLines = (obj, indentsCount) => {
-  const strings = JSON.stringify(obj, null, BASE_INDENT_COUNT)
-    .replaceAll('"', '')
-    .split('\n')
-    .map((str) => (str.endsWith(',') ? str.slice(0, str.length - 1) : str))
-    .map((str) => `${getIndent(indentsCount)}${str}`);
-
-  // need to remove open and close prop with brackets
-  return strings
-    .slice(1, strings.length - 1)
-    .join('\n');
-};
-
-const createObjectLines = (key, value, indentWithChangeCount, indentWithoutChangeCount, sign) => {
-  const openLine = createLine(key, undefined, true, indentWithChangeCount, sign);
-  const closeLine = createCloseObjectPropLine(indentWithoutChangeCount);
-  const line = transformObjectToLines(value, indentWithoutChangeCount);
-
-  return { openLine, closeLine, line };
+  return `${indent}${beforeProp}${key}: ${transformedValue}`;
 };
 
 const stylish = (diffNodes) => {
   const iter = (depth, diffNodesInner) => {
-    const currentIndentsCount = BASE_INDENT_COUNT * depth;
-    const currentIndentsWithShiftCount = currentIndentsCount - SHIFT;
-
     const result = diffNodesInner.map(({
       key, type, value, oldValue, children,
     }) => {
       switch (type) {
         case 'nested': {
-          const openLine = createLine(key, undefined, true, currentIndentsCount);
-          const closeLine = createCloseObjectPropLine(currentIndentsCount);
-
           const nodeChildren = iter(depth + 1, children);
-
+          const indentsCount = BASE_INDENT_COUNT * depth;
+          const indent = getIndent(indentsCount);
           return [
-            openLine,
+            `${indent}${key}: {`,
             nodeChildren,
-            closeLine,
+            `${indent}}`,
           ].join('\n');
         }
         case 'added': {
-          if (_.isPlainObject(value)) {
-            const {
-              openLine,
-              closeLine,
-              line,
-            } = createObjectLines(key, value, currentIndentsWithShiftCount, currentIndentsCount, '+');
-
-            return [
-              openLine,
-              line,
-              closeLine,
-            ].join('\n');
-          }
-
-          return createLine(key, value, false, currentIndentsWithShiftCount, '+');
+          return createLine(key, value, depth, '+');
         }
         case 'deleted': {
-          if (_.isPlainObject(value)) {
-            const {
-              openLine,
-              closeLine,
-              line,
-            } = createObjectLines(key, value, currentIndentsWithShiftCount, currentIndentsCount, '-');
-
-            return [
-              openLine,
-              line,
-              closeLine,
-            ].join('\n');
-          }
-
-          return createLine(key, value, false, currentIndentsWithShiftCount, '-');
+          return createLine(key, value, depth, '-');
         }
         case 'changed': {
-          if (_.isPlainObject(value)) {
-            const {
-              openLine,
-              closeLine,
-              line: addedLine,
-            } = createObjectLines(key, value, currentIndentsWithShiftCount, currentIndentsCount, '+');
-
-            const removedLine = createLine(
-              key,
-              oldValue,
-              false,
-              currentIndentsWithShiftCount,
-              '-',
-            );
-
-            return [
-              removedLine,
-              openLine,
-              addedLine,
-              closeLine,
-            ].join('\n');
-          }
-
-          if (_.isPlainObject(oldValue)) {
-            const {
-              openLine,
-              closeLine,
-              line: removedLine,
-            } = createObjectLines(key, oldValue, currentIndentsWithShiftCount, currentIndentsCount, '-');
-
-            const addedLine = createLine(
-              key,
-              value,
-              false,
-              currentIndentsWithShiftCount,
-              '+',
-            );
-
-            return [
-              openLine,
-              removedLine,
-              closeLine,
-              addedLine,
-            ].join('\n');
-          }
-
-          const removedProp = createLine(key, oldValue, false, currentIndentsWithShiftCount, '-');
-          const addedProp = createLine(key, value, false, currentIndentsWithShiftCount, '+');
+          const addedProp = createLine(key, value, depth, '+');
+          const removedProp = createLine(key, oldValue, depth, '-');
 
           return [
             removedProp,
@@ -156,14 +68,14 @@ const stylish = (diffNodes) => {
         }
 
         case 'unchanged': {
-          return createLine(key, value, false, currentIndentsCount);
+          return createLine(key, value, depth);
         }
         default:
           throw new Error(`Node type ${type} is not supported`);
       }
     });
 
-    return result.join('\n');
+    return result.join('\n').replaceAll('"', '');
   };
 
   const result = iter(1, diffNodes);
